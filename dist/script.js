@@ -14042,6 +14042,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _modules_tabs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/tabs */ "./src/js/modules/tabs.js");
 /* harmony import */ var _modules_forms__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/forms */ "./src/js/modules/forms.js");
 /* harmony import */ var _modules_changeModalState__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/changeModalState */ "./src/js/modules/changeModalState.js");
+/* harmony import */ var _modules_timer__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/timer */ "./src/js/modules/timer.js");
 
 // при нажиманні на тріггер відкривається модальне вікно (ми використовуєм певний селектор щоб показати  
 // саме те модальне вікно яке нам необхідно) після цього нам необхідно відстежувати події які виконуються 
@@ -14053,17 +14054,20 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 window.addEventListener('DOMContentLoaded', () => {
   "use strict";
 
   // створюємо змінну стану нашого модального вікна де користувач щось вибирає
   let modalState = {};
+  let deadline = '2023-01-01';
   Object(_modules_changeModalState__WEBPACK_IMPORTED_MODULE_4__["default"])(modalState);
   Object(_modules_modals__WEBPACK_IMPORTED_MODULE_1__["default"])();
   Object(_modules_tabs__WEBPACK_IMPORTED_MODULE_2__["default"])('.glazing_slider', '.glazing_block', '.glazing_content', 'active');
   Object(_modules_tabs__WEBPACK_IMPORTED_MODULE_2__["default"])('.decoration_slider', '.no_click', '.decoration_content > div > div', 'after_click');
   Object(_modules_tabs__WEBPACK_IMPORTED_MODULE_2__["default"])('.balcon_icons', '.balcon_icons_img', '.big_img > img', 'do_image_more', 'inline-block');
   Object(_modules_forms__WEBPACK_IMPORTED_MODULE_3__["default"])(modalState);
+  Object(_modules_timer__WEBPACK_IMPORTED_MODULE_5__["default"])('.container1', deadline);
 });
 // DOMContentLoaded - відповідає за те що наші скрипти починають виконуватися тільки тоді коли наша DOM структура 
 // на сторінці готова
@@ -14105,12 +14109,7 @@ const changeModalState = state => {
   // валідуємо те що нам потрібно задопомогою певного модуля
   Object(_checkNumImputs__WEBPACK_IMPORTED_MODULE_0__["default"])('#width');
   Object(_checkNumImputs__WEBPACK_IMPORTED_MODULE_0__["default"])('#height');
-  // перевіряємо чи всі дані заповнені
-  // function total() {
-  //     if(!windowForm || !windowWidth || !windowHeight || !windowType || !windowProfile) {
 
-  //     }
-  // }
   // 4. Створюєм ф-цію і передаємо в неї 3 аргументи 
   // 1) e - та подія яка буде відбуватись
   // 2) elem - елемент на якому буде виконуватись подія
@@ -14203,7 +14202,8 @@ const forms = state => {
   // потрібно буде навішати один і той самий обробиник події на всі одинакові форми
   const form = document.querySelectorAll('form'),
     inputs = document.querySelectorAll('input'),
-    modal = document.querySelector('.popup_engineer');
+    modal = document.querySelector('.popup_engineer'),
+    btnCalc = document.querySelector('.popup_calc_end');
   Object(_checkNumImputs__WEBPACK_IMPORTED_MODULE_0__["default"])('input[name="user_phone"]');
   const message = {
     loading: 'Завантаження...',
@@ -14253,6 +14253,7 @@ const forms = state => {
         setTimeout(() => {
           statusMessage.remove();
           modal.remove();
+          btnCalc.remove();
           document.body.style.overflow = "";
         }, 3000);
       });
@@ -14406,6 +14407,70 @@ const tabs = function (headerSelector, tabSelector, contentSelector, activeClass
   });
 };
 /* harmony default export */ __webpack_exports__["default"] = (tabs);
+
+/***/ }),
+
+/***/ "./src/js/modules/timer.js":
+/*!*********************************!*\
+  !*** ./src/js/modules/timer.js ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const timer = (id, deadline) => {
+  const addZerro = num => {
+    if (num <= 9) {
+      return '0' + num;
+    } else {
+      return num;
+    }
+  };
+  const getTimeRemaining = endtime => {
+    const t = Date.parse(endtime) - Date.parse(new Date()),
+      seconds = Math.floor(t / 1000 % 60),
+      minutes = Math.floor(t / 1000 / 60 % 60),
+      hours = Math.floor(t / (1000 * 60 * 60) % 24),
+      days = Math.floor(t / (1000 * 60 * 60 * 24));
+    return {
+      'total': t,
+      'days': days,
+      'hours': hours,
+      'minutes': minutes,
+      'seconds': seconds
+    };
+  };
+  const setClock = (selector, endtime) => {
+    const timer = document.querySelector(selector),
+      days = timer.querySelector('#days'),
+      hours = timer.querySelector('#hours'),
+      minutes = timer.querySelector('#minutes'),
+      seconds = timer.querySelector('#seconds'),
+      timeInterval = setInterval(updateClock, 1000);
+    updateClock();
+    // ф-ція для визначення часу скільки залишилось до дедлайну      
+    function updateClock() {
+      const t = getTimeRemaining(endtime); // для того щоб дізнатися скільки часу залишилося до кінця
+
+      days.textContent = addZerro(t.days);
+      hours.textContent = addZerro(t.hours);
+      minutes.textContent = addZerro(t.minutes);
+      minutes.textContent = addZerro(t.minutes);
+      seconds.textContent = addZerro(t.seconds);
+      if (t.total <= 0) {
+        days.textContent = "00";
+        hours.textContent = "00";
+        minutes.textContent = "00";
+        minutes.textContent = "00";
+        seconds.textContent = "00";
+        clearInterval(timeInterval);
+      }
+    }
+  };
+  setClock(id, deadline);
+};
+/* harmony default export */ __webpack_exports__["default"] = (timer);
 
 /***/ }),
 
