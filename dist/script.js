@@ -14040,17 +14040,271 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _slider__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./slider */ "./src/js/slider.js");
 /* harmony import */ var _modules_modals__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modules/modals */ "./src/js/modules/modals.js");
 /* harmony import */ var _modules_tabs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/tabs */ "./src/js/modules/tabs.js");
+/* harmony import */ var _modules_forms__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/forms */ "./src/js/modules/forms.js");
+/* harmony import */ var _modules_changeModalState__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/changeModalState */ "./src/js/modules/changeModalState.js");
+/* harmony import */ var _modules_timer__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/timer */ "./src/js/modules/timer.js");
+/* harmony import */ var _modules_images__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/images */ "./src/js/modules/images.js");
+
+// при нажиманні на тріггер відкривається модальне вікно (ми використовуєм певний селектор щоб показати  
+// саме те модальне вікно яке нам необхідно) після цього нам необхідно відстежувати події які виконуються 
+// з хрестиком або з подложкою модального вікна, відслідковуємо кліки на ці два елемента і якщо це сталось то це 
+// це модальне вікно закриється приховувати можна декількома способами (наприклад змінюючи властивість display,
+// або міняючи css класи, якщо вони є)
+// 1) в папці модулес створюєм новий файл
+
+
+
 
 
 
 window.addEventListener('DOMContentLoaded', () => {
   "use strict";
 
+  // створюємо змінну стану нашого модального вікна де користувач щось вибирає
+  let modalState = {};
+  let deadline = '2023-01-01';
+  Object(_modules_changeModalState__WEBPACK_IMPORTED_MODULE_4__["default"])(modalState);
   Object(_modules_modals__WEBPACK_IMPORTED_MODULE_1__["default"])();
   Object(_modules_tabs__WEBPACK_IMPORTED_MODULE_2__["default"])('.glazing_slider', '.glazing_block', '.glazing_content', 'active');
   Object(_modules_tabs__WEBPACK_IMPORTED_MODULE_2__["default"])('.decoration_slider', '.no_click', '.decoration_content > div > div', 'after_click');
   Object(_modules_tabs__WEBPACK_IMPORTED_MODULE_2__["default"])('.balcon_icons', '.balcon_icons_img', '.big_img > img', 'do_image_more', 'inline-block');
+  Object(_modules_forms__WEBPACK_IMPORTED_MODULE_3__["default"])(modalState);
+  Object(_modules_timer__WEBPACK_IMPORTED_MODULE_5__["default"])('.container1', deadline);
+  Object(_modules_images__WEBPACK_IMPORTED_MODULE_6__["default"])();
 });
+// DOMContentLoaded - відповідає за те що наші скрипти починають виконуватися тільки тоді коли наша DOM структура 
+// на сторінці готова
+
+// 1) зробити щоб після того як користувач відправив дані з модального вікна
+// модальне вікно закрилось
+// 2) зробити так щоб після того як ми відправили нашу форму обєкт очищувався, щоб він був пустим і готовий до наступних відправок
+// (необовязково)
+// 3) зробити перевірки на заповненність параметрів якщо вони не заповнені то коритувач не зможе пройти дальше
+
+// після того як дані пішли на сервер модальне вікно закривалось
+
+/***/ }),
+
+/***/ "./src/js/modules/changeModalState.js":
+/*!********************************************!*\
+  !*** ./src/js/modules/changeModalState.js ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _checkNumImputs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./checkNumImputs */ "./src/js/modules/checkNumImputs.js");
+
+
+// формуємо обєкт з тими даними які нам необхідно відправити (modalState)
+// в який будемо поміщати всі ті дані які вибрав користувач
+
+// 1. Створюємо стрілочну ф-цію
+const changeModalState = state => {
+  // получаєм елементи з якими ми будемо працювати
+  const windowForm = document.querySelectorAll('.balcon_icons_img'),
+    windowWidth = document.querySelectorAll('#width'),
+    windowHeight = document.querySelectorAll('#height'),
+    windowType = document.querySelectorAll('#view_type'),
+    btn = document.querySelector('.popup_calc_button'),
+    //
+    windowProfile = document.querySelectorAll('.checkbox');
+
+  // валідуємо те що нам потрібно задопомогою певного модуля
+  Object(_checkNumImputs__WEBPACK_IMPORTED_MODULE_0__["default"])('#width');
+  Object(_checkNumImputs__WEBPACK_IMPORTED_MODULE_0__["default"])('#height');
+
+  // 4. Створюєм ф-цію і передаємо в неї 3 аргументи 
+  // 1) e - та подія яка буде відбуватись
+  // 2) elem - елемент на якому буде виконуватись подія
+  // 3) prop - property яке ми будемо змінювати в state
+  function bindActionToElems(e, elem, prop) {
+    // 2. Беремо елемент і перебираємо його всередину передаємо 2 аргументи 
+    // 1) item - кожний елемент який ми перебираєм
+    // 2) i - індекс цього елемента     
+    // зробити так щоб коли користувач клікає на певний по рахунку елемент (тобто на картинку)
+    // 1 елемент - 1 картинка
+    // 2 елемент - 2 картинка
+    elem.forEach((item, i) => {
+      // 3. Беремо кожне окреме зображення і навішуємо йому обробника події
+      item.addEventListener(e, () => {
+        switch (item.nodeName) {
+          case 'SPAN':
+            state[prop] = i;
+            break;
+          case 'INPUT':
+            if (item.getAttribute('type') === 'checkbox') {
+              i === 0 ? state[prop] = 'Холодне' : state[prop] = 'Тепле';
+              // Беремо всі checkbox які є і проходимся по кожному з них задопомогою циклу
+              // і забираєм галочки зі всіх checkbox крім того в який клікнув користувач
+              elem.forEach((box, j) => {
+                // кожен checkbox який сюда попаде галочка в нього зніметься (її не буде)
+                box.checked = false;
+                // але як тільки ми наткнемося на той checkbox який клікнув користувач то галочка поставиться
+                if (i == j) {
+                  box.checked = true;
+                }
+              });
+            } else {
+              state[prop] = item.value;
+            }
+            break;
+          case 'SELECT':
+            state[prop] = item.value;
+            break;
+        }
+        console.log(state);
+      });
+    });
+  }
+  bindActionToElems('click', windowForm, 'form');
+  bindActionToElems('input', windowHeight, 'height');
+  bindActionToElems('input', windowWidth, 'width');
+  bindActionToElems('change', windowType, 'type');
+  bindActionToElems('change', windowProfile, 'profile');
+};
+/* harmony default export */ __webpack_exports__["default"] = (changeModalState);
+
+/***/ }),
+
+/***/ "./src/js/modules/checkNumImputs.js":
+/*!******************************************!*\
+  !*** ./src/js/modules/checkNumImputs.js ***!
+  \******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const checkNumImputs = selector => {
+  const numInputs = document.querySelectorAll(selector);
+  numInputs.forEach(item => {
+    item.addEventListener('input', () => {
+      item.value = item.value.replace(/\D/, '');
+    });
+  });
+};
+/* harmony default export */ __webpack_exports__["default"] = (checkNumImputs);
+
+/***/ }),
+
+/***/ "./src/js/modules/forms.js":
+/*!*********************************!*\
+  !*** ./src/js/modules/forms.js ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _checkNumImputs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./checkNumImputs */ "./src/js/modules/checkNumImputs.js");
+
+const forms = state => {
+  // зробити дві змінні
+  // 1 - цу всі форми які є на сторінці 
+  // 2 - всі input які є в цих формах
+  // потрібно буде навішати один і той самий обробиник події на всі одинакові форми
+  const form = document.querySelectorAll('form'),
+    inputs = document.querySelectorAll('input'),
+    modal = document.querySelector('.popup_engineer'),
+    btnCalc = document.querySelector('.popup_calc_end');
+  Object(_checkNumImputs__WEBPACK_IMPORTED_MODULE_0__["default"])('input[name="user_phone"]');
+  const message = {
+    loading: 'Завантаження...',
+    success: 'Дякую! Скоро ми з вами звяжемся',
+    failure: 'Щось пішло не так...'
+  };
+  const postData = async (url, data) => {
+    document.querySelector('.status').textContent = message.loading;
+    let res = await fetch(url, {
+      method: "POST",
+      body: data
+    });
+    return await res.text();
+  };
+  const clearInputs = () => {
+    inputs.forEach(i => {
+      i.value = '';
+    });
+  };
+  form.forEach(i => {
+    i.addEventListener('submit', e => {
+      e.preventDefault();
+      let statusMessage = document.createElement('div');
+      statusMessage.classList.add('status');
+      // поміщаєм цей блок на сторінку
+      i.appendChild(statusMessage); // поміщаєм цей блок в кінець нашої форми
+
+      const formData = new FormData(i); // цей обєкт найде всі інпути збере всі ці дані в спеціальну структуру,
+      // яку ми помістимо в змінну formData
+
+      // використовується тоді коли ми відправляємо останню форму з нашого модального канкулятора
+      // перевіряєм чи дійсно це те модальне вікно яку нас цікавить, якщо це так то ми беремо ті дані 
+      // з state які вже сформувались і перебираємо і відправляємо в formData задопомогою методу append
+      if (i.getAttribute('data-calc') == "end") {
+        for (let key in state) {
+          formData.append(key, state[key]);
+        }
+      }
+
+      // коли formData буду повністю сформована ми її відправляємо
+      // відправляємо тіло запиту на сервер
+      postData('assets/server.php', formData).then(res => {
+        console.log(res);
+        statusMessage.textContent = message.success;
+      }).catch(() => statusMessage.textContent = message.failure).finally(() => {
+        clearInputs();
+        setTimeout(() => {
+          statusMessage.remove();
+          modal.remove();
+          btnCalc.remove();
+          document.body.style.overflow = "";
+        }, 3000);
+      });
+    });
+  });
+};
+/* harmony default export */ __webpack_exports__["default"] = (forms);
+
+/***/ }),
+
+/***/ "./src/js/modules/images.js":
+/*!**********************************!*\
+  !*** ./src/js/modules/images.js ***!
+  \**********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const images = () => {
+  const imgPopup = document.createElement('div'),
+    workSection = document.querySelector('.works'),
+    bigImage = document.createElement('img');
+  imgPopup.classList.add('popup');
+  workSection.appendChild(imgPopup);
+  imgPopup.style.justifyContent = 'center';
+  imgPopup.style.alignItems = 'center';
+  imgPopup.style.display = 'none';
+  imgPopup.appendChild(bigImage);
+  workSection.addEventListener('click', e => {
+    e.preventDefault();
+    let target = e.target;
+    if (target && target.classList.contains('preview')) {
+      imgPopup.style.display = 'flex';
+      const path = target.parentNode.getAttribute('href');
+      bigImage.setAttribute('src', path);
+      document.body.style.overflow = "hidden";
+    }
+    // коли клікаєм на подложку модальне вікно повнинно закриватись
+    if (target && target.matches('div.popup')) {
+      imgPopup.style.display = 'none';
+      document.body.style.overflow = "";
+    }
+  });
+};
+/* harmony default export */ __webpack_exports__["default"] = (images);
 
 /***/ }),
 
@@ -14063,32 +14317,78 @@ window.addEventListener('DOMContentLoaded', () => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+// 2. Щоб експортувати весь код який буде знаходитися тут, необхідно зробити певну структуру
+// використовуючи звичайні ф-ції
 const modals = () => {
+  // 3. пишемо загальний алгоритм який буде приймати в себе різні аргументи і робити те що нам потрібно
+  // створюєм ф-цію яка буде відповідати за привязку модального вікна до певного триггеру
+  // trigger - селектор нашої кнопки по якій ми будемо клікати
+  // modal - модальне вікно яке ми будемо відкривати
+  // close - селекор який закриває модальне вікно (хрестик)
   function bindModal(triggerSelector, modalSelector, closeSelector) {
     let closeClickOverlay = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+    let widthValue = "",
+      heightValue = "",
+      typeValue = "",
+      formValue = "",
+      profileValue = "";
+    const windowForm = document.querySelectorAll('.balcon_icons_img'),
+      windowWidth = document.querySelector('#width'),
+      windowHeight = document.querySelector('#height'),
+      windowType = document.querySelectorAll('#view_type'),
+      btn = document.querySelector('.popup_calc_button'),
+      windowProfile = document.querySelectorAll('.checkbox');
     const trigger = document.querySelectorAll(triggerSelector),
       modal = document.querySelector(modalSelector),
       close = document.querySelector(closeSelector),
-      windows = document.querySelectorAll('[data-modal]');
+      windows = document.querySelectorAll('[data-modal]'),
+      scroll = calcScroll();
+    windowHeight.addEventListener('change', e => {
+      console.log(e.target.value);
+      heightValue = e.target.value;
+    });
+    windowWidth.addEventListener('change', e => {
+      console.log(e.target.value);
+      widthValue = e.target.value;
+    });
     trigger.forEach(item => {
       item.addEventListener('click', e => {
-        if (e.target) {
-          e.preventDefault();
+        if (!widthValue && triggerSelector === '.popup_calc_button') {
+          return;
         }
+        if (!heightValue && triggerSelector === '.popup_calc_button') {
+          return;
+        }
+
+        // e.target - чи точно існує той елемент на який клікнув користувач
+        if (e.target) {
+          e.preventDefault(); // відміняєм стандартну поведінку браузера
+        }
+
         windows.forEach(item => {
           item.style.display = 'none';
         });
         modal.style.display = "block";
+        // робимо так що коли модальне вікно відкрито то ми можемо гортати тільки модальне вікно,
+        // якщо воно велике по висоті якщо ні то сторінка просто заморожується і при виклику модального
+        // вікна скролити сторінку буде не можливо
         document.body.style.overflow = "hidden";
+        // document.body.classList.add('modal-open');
+        document.body.style.marginRight = `${scroll}px`;
       });
     });
+    // закриття модального вікна при натисканні на хрестик
     close.addEventListener('click', () => {
       windows.forEach(item => {
         item.style.display = 'none';
       });
       modal.style.display = "none";
       document.body.style.overflow = "";
+      // document.body.classList.remove('modal-open');
+      document.body.style.marginRight = `0px`;
     });
+
+    // закриття модального вікна при натисканні на подложку
     modal.addEventListener('click', e => {
       if (e.target === modal && closeClickOverlay) {
         windows.forEach(item => {
@@ -14096,14 +14396,29 @@ const modals = () => {
         });
         modal.style.display = "none";
         document.body.style.overflow = "";
+        // document.body.classList.remove('modal-open'); 
+        document.body.style.marginRight = `0px`;
       }
     });
   }
+
+  // відкриття модального вікна через певний проміжок часу
   function showModalByTime(selector, time) {
     setTimeout(function () {
       document.querySelector(selector).style.display = "block";
       document.body.style.overflow = "";
     }, time);
+  }
+  function calcScroll() {
+    let div = document.createElement('div');
+    div.style.width = '50px';
+    div.style.height = '50px';
+    div.style.overflowY = 'scroll';
+    div.style.visibility = 'hidden';
+    document.body.appendChild(div);
+    let scrollWidth = div.offsetWidth - div.clientWidth;
+    div.remove();
+    return scrollWidth;
   }
   bindModal('.popup_engineer_btn', '.popup_engineer', '.popup_engineer .popup_close');
   bindModal('.phone_link', '.popup', '.popup .popup_close');
@@ -14128,6 +14443,10 @@ const modals = () => {
 __webpack_require__.r(__webpack_exports__);
 const tabs = function (headerSelector, tabSelector, contentSelector, activeClass) {
   let display = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : "block";
+  // використовуєм делегування подій (це коли ми вішаєм одного обробника подій на загальний блок)
+  // і всередині відслідковуєм куди саме клікнув користувач, і взалежності від цього ми відкриваєм 
+  // контент який відповідає індексу тобто силці на яку клікнув користувач
+  // також між табами буде мінятися клас активності в залежності від того на який таб ми натискаєм
   const header = document.querySelector(headerSelector),
     tab = document.querySelectorAll(tabSelector),
     content = document.querySelectorAll(contentSelector);
@@ -14146,8 +14465,22 @@ const tabs = function (headerSelector, tabSelector, contentSelector, activeClass
   }
   hideTabContent();
   showTabContent();
+
+  // відслідковуємо в який таб клікнув користувач викор делегування підій
+  // 1) навішуєм обробника події кліку на загальну область яка поєднює в собі всі таби
+  // 2) перевіряєм (if) чи ми дійсно клікнули в один з табів
+  // 3) коли ми впевнились що клікнули в таб ми починаєм їх перебирати один за одним
+  // запамятовуючи те тільки той таб який ми перебираєм але й його номер по-порядку
+  // як тільки в нашому переборі виконалась умова де ми перевіряєм що таб на який клікнув користувач
+  // = тому табові який зараз перебирається ми запамятовуєм його індекс і прямо тут починаєм його використовувати
+  // задопомогою тих ф-цій які ми описали (тобто наприклад ми клікнули на 3 таб скрипт переконався
+  // що ми дійсно клікнули на 3 таб взяв необхідну цифру і підставив її замість (n) і ф-ція виконалась)
+
   header.addEventListener('click', e => {
     const target = e.target;
+    // перевіряєм чи користувач точно клікнув в певний таб
+    // в replace передаємо два аргумента 1 - це регулярний вираз 
+    // 2 - на що будемо замінювати цей регулярний вираз
     if (target && (target.classList.contains(tabSelector.replace(/\./, "")) || target.parentNode.classList.contains(tabSelector.replace(/\./, "")))) {
       tab.forEach((item, n) => {
         if (target == item || target.parentNode == item) {
@@ -14159,6 +14492,70 @@ const tabs = function (headerSelector, tabSelector, contentSelector, activeClass
   });
 };
 /* harmony default export */ __webpack_exports__["default"] = (tabs);
+
+/***/ }),
+
+/***/ "./src/js/modules/timer.js":
+/*!*********************************!*\
+  !*** ./src/js/modules/timer.js ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const timer = (id, deadline) => {
+  const addZerro = num => {
+    if (num <= 9) {
+      return '0' + num;
+    } else {
+      return num;
+    }
+  };
+  const getTimeRemaining = endtime => {
+    const t = Date.parse(endtime) - Date.parse(new Date()),
+      seconds = Math.floor(t / 1000 % 60),
+      minutes = Math.floor(t / 1000 / 60 % 60),
+      hours = Math.floor(t / (1000 * 60 * 60) % 24),
+      days = Math.floor(t / (1000 * 60 * 60 * 24));
+    return {
+      'total': t,
+      'days': days,
+      'hours': hours,
+      'minutes': minutes,
+      'seconds': seconds
+    };
+  };
+  const setClock = (selector, endtime) => {
+    const timer = document.querySelector(selector),
+      days = timer.querySelector('#days'),
+      hours = timer.querySelector('#hours'),
+      minutes = timer.querySelector('#minutes'),
+      seconds = timer.querySelector('#seconds'),
+      timeInterval = setInterval(updateClock, 1000);
+    updateClock();
+    // ф-ція для визначення часу скільки залишилось до дедлайну      
+    function updateClock() {
+      const t = getTimeRemaining(endtime); // для того щоб дізнатися скільки часу залишилося до кінця
+
+      days.textContent = addZerro(t.days);
+      hours.textContent = addZerro(t.hours);
+      minutes.textContent = addZerro(t.minutes);
+      minutes.textContent = addZerro(t.minutes);
+      seconds.textContent = addZerro(t.seconds);
+      if (t.total <= 0) {
+        days.textContent = "00";
+        hours.textContent = "00";
+        minutes.textContent = "00";
+        minutes.textContent = "00";
+        seconds.textContent = "00";
+        clearInterval(timeInterval);
+      }
+    }
+  };
+  setClock(id, deadline);
+};
+/* harmony default export */ __webpack_exports__["default"] = (timer);
 
 /***/ }),
 
